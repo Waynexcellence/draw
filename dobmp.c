@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
 #include <assert.h>
 
 #define ERR_EXIT(a) do { perror(a); exit(1); } while(0)
@@ -34,11 +33,6 @@ typedef struct {
     BMPHeader header;
     unsigned char** data; 
 } BMPImage;
-
-void color( int x ){
-    if( x>=0 && x<=15 ) SetConsoleTextAttribute( GetStdHandle(STD_OUTPUT_HANDLE),x);
-    else                SetConsoleTextAttribute( GetStdHandle(STD_OUTPUT_HANDLE),7);
-}
 
 void get_header( BMPImage* image , FILE* file ){
     fread( image->header.type     , 2 , 1 , file );
@@ -101,7 +95,7 @@ int main( int argc , char** argv ){
         if( display == BUFFLY ){
             bmpimage[x].data = calloc( bmpimage[x].header.height_px , sizeof(char*) );
             for(int y=0;y<bmpimage[x].header.height_px;y++){
-                bmpimage[x].data[y] = calloc( bmpimage[x].header.width_px , sizeof(char) );
+                bmpimage[x].data[y] = calloc( bmpimage[x].header.width_px+1 , sizeof(char) );
             }
         }
         for(int y=bmpimage[x].header.height_px-1;y>=0;y--){
