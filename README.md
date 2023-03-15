@@ -8,3 +8,6 @@
     - Convert your picture to a bmp file.(Only support black-white very sorry)  
     - Put it in the directory.  
     - Run `dobmp <your bmpfilename>`
+
+2023/3/15 update: now support color version~
+run `colorbmp <filename>` or more file you want, similar to previous
