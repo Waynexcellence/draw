@@ -28,7 +28,8 @@ typedef struct {           // Total: 54 bytes
 
 typedef struct {
     BMPHeader header;
-    unsigned char** data; 
+    unsigned char** data;
+    unsigned char** info;
 } BMPImage;
 
 void get_header( BMPImage* image , FILE* file ){
@@ -91,29 +92,44 @@ int main( int argc , char** argv ){
         char input[100] = {};
         scanf("%s" , input );// wait for user input
         int padding = bmpimage[x].header.width_px%4;
-        bmpimage[x].data = calloc( bmpimage[x].header.height_px , sizeof(char*) );
+        bmpimage[x].info = calloc( bmpimage[x].header.height_px , sizeof(char*) );
         for(int y=0;y<bmpimage[x].header.height_px;y++){
-            bmpimage[x].data[y] = calloc( bmpimage[x].header.width_px+1 , sizeof(char) );
+            bmpimage[x].info[y] = calloc( bmpimage[x].header.width_px+1 , sizeof(char) );
         }
 
         for(int y=bmpimage[x].header.height_px-1;y>=0;y--){
             fseek( file[x] , bmpimage[x].header.offset+y*(3*bmpimage[x].header.width_px+padding) , SEEK_SET );
             for(int z=0;z<bmpimage[x].header.width_px;z++){
                 fread( bgr , 3 , 1 , file[x] );
-
                 int average = (bgr[0]+bgr[1]+bgr[2]) / 3;
+                assert( average <= 255 && average >= 0 );
+                bmpimage[x].info[bmpimage[x].header.height_px-1-y][z] = average;
+            }
+        }
+        int width = bmpimage[x].header.width_px/2;
+        int height = bmpimage[x].header.height_px/2;
+        bmpimage[x].data = calloc( height , sizeof(char*) );
+        for(int y=0;y<height;y++){
+            bmpimage[x].data[y] = calloc( bmpimage[x].header.width_px/2 , sizeof(char) );
+        }
+        unsigned char** info = bmpimage[x].info;
+        for(int y=0;y<height;y++){
+            for(int z=0;z<width;z++){
+                int average = (info[y*2][z*2]+info[y*2+1][z*2]+info[y*2][z*2+1]+info[y*2+1][z*2+1]) / 4;
                 int index = average/light_diff;
                 if( index >= density_length ) index = density_length-1;
                 if( index < 0 ) index = 0;
-                char c = density[index];
-
-                bmpimage[x].data[bmpimage[x].header.height_px-1-y][z] = c;
+                bmpimage[x].data[y][z] = density[index];
             }
         }
         for(int y=0;y<bmpimage[x].header.height_px;y++){
+            free( bmpimage[x].info[y] );
+        }
+        for(int y=0;y<height;y++){
             printf("%s\n" , bmpimage[x].data[y] );
             free( bmpimage[x].data[y] );                
         }
+        free( bmpimage[x].info );
         free( bmpimage[x].data );
     }
 
